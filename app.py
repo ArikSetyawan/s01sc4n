@@ -70,12 +70,21 @@ def HeaderTokenVerification(header):
 class Resource_Users(Resource):
     def get(self):
         # create_user = graph.run(" create (n:Users {Name:$Name}) ",Name="Alice")
-        query_user = session.run("match (n) return n")
+        query_user = session.run("match (a:Users {Name:'Arik'})-[r1]->(b:Interactions)<-[r2]-(c) return a,b,c")
+        data = []
         for i in query_user:
+            d = {}
             # GET LABEL OF NODE
-            print(list(i.values()[0].labels)[0])
+            # print(list(i.values()[0].labels)[0])
+            node_data = i.data()
+            d['InteractionID'] = node_data['b']['InteractionID']
+            if list(i.values()[2].labels)[0] == "Places":
+                d["Visit"] = {"Name":node_data['c']['Name']}
+            else:
+                d["Interaction"] = {"Name":node_data['c']['Name']}
+            data.append(d)
         # print("createdr")
-        return jsonify({"message":"HelloWolrd"})
+        return jsonify({"message":"HelloWolrd", "data":data})
 
 
 api.add_resource(Resource_Users, '/api/users/')
