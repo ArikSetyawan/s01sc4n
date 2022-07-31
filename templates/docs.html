@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Documentation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="static/css/prism.css">
+<!--===============================================================================================-->
+</head>
+<body>
+    <div class="row">
+        <div class="container">
+            <h2>soiscan ==> Social Interaction Scanner ==> Docs</h2><br>
+            <ul>
+                <li><a href="#User">User</a></li>
+                <li><a href="#Scan">Scan</a></li>
+                <li><a href="#Interaction">Interaction</a></li>
+                <li><a href="#Login">Login</a></li>
+            </ul>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card" id="User">
+                        <div class="card-header">
+                            <h5 class="card-title">Users API</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/users/</p>
+                            <hr>
+                            <h5>GET (Query Users)</h5>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter (Optional)</th>
+                                        <th>Description</th>
+                                        <th>Data Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>NIK</td>
+                                        <td>NIK User (Query User by NIK)</td>
+                                        <td>INT</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="card-text">Note: *Gunakan Parameter tersebut jika ingin mengambil data user secara spesifik menggunakan NIK</p>
+
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE
+{
+    "code": "200",
+    "data": [
+        {
+            "Email": "arik@gmail.com",
+            "NIK": 9936961364932,
+            "Name": "Arik",
+            "Password": "85236592636241",
+            "Phone": 27457851227657,
+            "Photo": "Default.png",
+            "Status": "Negatif",
+            "Tagid": "12345",
+            "UserID": 1
+        },
+        {
+            "Email": "bagus@gmail.com",
+            "NIK": 81413094049709,
+            "Name": "Bagus",
+            "Password": "12548646713267",
+            "Phone": 34661549658975,
+            "Photo": "Default.png",
+            "Status": "Negatif",
+            "Tagid": "12346",
+            "UserID": 2
+        }
+    ],
+    "error": null,
+    "message": "Get User Success"
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" style="margin-top: 30px;">
+                    <div class="card" id="Scan">
+                        <div class="card-header">
+                            <h5 class="card-title">Scan Interaction API</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/scan/</p>
+                            <p class="card-text">Header : Token</p>
+                            <p class="card-text">Content-Type : form-data</p>
+                            <hr>
+                            <h5>GET (Doing Interaction)</h5>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Description</th>
+                                        <th>Data Type</th>
+                                    </tr>
+                                </thead>
+                                    <tr>
+                                        <td>NIK</td>
+                                        <td>NIK (hasil scan QR code)</td>
+                                        <td>INT</td>
+                                    </tr>
+                                    <tr>
+                                        <td>lat</td>
+                                        <td>latitude (GPS)</td>
+                                        <td>STR</td>
+                                    </tr>
+                                    <tr>
+                                        <td>lng</td>
+                                        <td>longitude (GPS)</td>
+                                        <td>STR</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="card-text">Note: *Parameter Wajib Diisi.</p>
+
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE
+{
+    "code": "200",
+    "data": null,
+    "error": null,
+    "message": "Interaction Created"
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" style="margin-top: 30px;">
+                    <div class="card" id="Interaction">
+                        <div class="card-header">
+                            <h5 class="card-title">Interactions API</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/interactions/</p>
+                            <p class="card-text">Header : Token</p>
+                            <hr>
+                            <h5>GET (Query Interactions)</h5>
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE
+{
+    "code": "200",
+    "data": [
+        {
+            "Interaction": {
+                "Email": "alice@gmail.com",
+                "NIK": 32240448664302,
+                "Name": "Alice",
+                "Password": "21429059086783",
+                "Phone": 75707956542097,
+                "Photo": "Default.png",
+                "Status": "Negatif",
+                "Tagid": "12348",
+                "UserID": 4
+            },
+            "InteractionID": "f617a9a5-2b11-458a-b6c1-c449600c4474",
+            "datetime_print": "2022-07-31 16:00:54",
+            "datetime_sql": 1659258054.1418018,
+            "lat": "-7.4017335",
+            "lng": "112.589526"
+        },
+        {
+            "InteractionID": 3,
+            "Visit": {
+                "Name": "Haris Hotel"
+            },
+            "datetime_print": "2020-09-13 18:18:26",
+            "datetime_sql": 1599995906,
+            "lat": "-7.4106416",
+            "lng": "112.6469039"
+        },
+        {
+            "Interaction": {
+                "Email": "setyawan@gmail.com",
+                "NIK": 39982202448521,
+                "Name": "Setyawan",
+                "Password": "76799919709474",
+                "Phone": 70959398044986,
+                "Photo": "Default.png",
+                "Status": "Negatif",
+                "Tagid": "12347",
+                "UserID": 3
+            },
+            "InteractionID": 2,
+            "datetime_print": "2020-09-13 18:18:26",
+            "datetime_sql": 1599995906,
+            "lat": "-7.4106416",
+            "lng": "112.6469039"
+        }
+    ],
+    "error": null,
+    "message": "Get Interactions Success"
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" style="margin-top: 30px;">
+                    <div class="card" id="Login">
+                        <div class="card-header">
+                            <h5 class="card-title">Login API</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/login/</p>
+                            <hr>
+                            <h5>POST (Check Login)</h5>
+                            <p class="card-text">Content-Type : form-data</p>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Description</th>
+                                        <th>type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Email</td>
+                                        <td>Email User</td>
+                                        <td>STR</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Password</td>
+                                        <td>Password User</td>
+                                        <td>STR</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="card-text">Note: *Data Wajib Diisi</p>
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE IF SUCCESS
+{
+    "code": "200",
+    "data": {
+        "Token": {
+            "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOjEsInR5cGUiOiJhY2Nlc3NfdG9rZW4iLCJleHAiOjE2NTkyNTU0MDR9.2D3z_boVC4xoj9ZwNQWDUi3Mr7DOfrYI6btXwhLX8J8",
+            "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOjEsInR5cGUiOiJyZWZyZXNoX3Rva2VuIiwiZXhwIjoxNjYxODQ2ODA0fQ.S8PkAEjvM5-cFRrvxv8VFj0aT-HQRmoy-TWfN_s9-3A"
+        },
+        "User": {
+            "Email": "arik@gmail.com",
+            "NIK": 9936961364932,
+            "Name": "Arik",
+            "Password": "85236592636241",
+            "Phone": 27457851227657,
+            "Photo": "Default.png",
+            "Status": "Negatif",
+            "Tagid": "12345",
+            "UserID": 1
+        }
+    },
+    "error": null,
+    "message": "Login Success"
+}
+
+#OUTPUT IF TOKEN EXPIRE
+{
+    "code": "401",
+    "data": null,
+    "error": {
+        "header": [
+            {
+                "message": "Token Expired",
+                "params": "Token"
+            }
+        ]
+    },
+    "message": "Token Expired"
+}
+
+#OUTPUT IF TOKEN INVALID
+{
+    "code": "401",
+    "data": null,
+    "error": {
+        "header": [
+            {
+                "message": "Token Invalid",
+                "params": "Token"
+            }
+        ]
+    },
+    "message": "Token Invalid"
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <br><br>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script type="static/js/prism.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, abort, request, make_response
+from flask import Flask, jsonify, abort, request, make_response, render_template
 from flask_restful import Api, Resource, reqparse
 from neo4j import GraphDatabase, basic_auth
 import datetime, time, uuid
@@ -18,7 +18,9 @@ api = Api(app)
 # App Config
 app.config["SECRET_KEY"] = "ThisisVerySecret"
 
-# Custom Function
+@app.route('/')
+def index():
+    return render_template('docs.html')
 
 # JWT
 class AuthHandler():
@@ -200,7 +202,7 @@ class Resource_Interactions(Resource):
             else:
                 d["Interaction"] = node_data['c']
             data.append(d)
-        return jsonify({"message":"HelloWolrd", "data":data})
+        return jsonify({"code":"200","data":data,"error":None,"message":"Get Interactions Success"})
 
 class Resource_Login(Resource):
     def post(self):
