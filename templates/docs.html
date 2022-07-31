@@ -18,6 +18,7 @@
                 <li><a href="#Scan">Scan</a></li>
                 <li><a href="#Interaction">Interaction</a></li>
                 <li><a href="#Login">Login</a></li>
+                <li><a href="#RefreshToken">Refresh Token</a></li>
             </ul>
             <div class="row">
                 <div class="col-12">
@@ -96,7 +97,7 @@
                         <div class="card-body">
                             <p class="card-text">Endpoint = /api/scan/</p>
                             <p class="card-text">Header : Token</p>
-                            <p class="card-text">Content-Type : form-data</p>
+                            <p class="card-text">Content-Type : multipart/form-data</p>
                             <hr>
                             <h5>GET (Doing Interaction)</h5>
                             <table class="table table-bordered">
@@ -230,7 +231,7 @@
                             <p class="card-text">Endpoint = /api/login/</p>
                             <hr>
                             <h5>POST (Check Login)</h5>
-                            <p class="card-text">Content-Type : form-data</p>
+                            <p class="card-text">Content-Type : multipart/form-data</p>
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
@@ -309,6 +310,70 @@
     },
     "message": "Token Invalid"
 }
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" style="margin-top: 30px;">
+                    <div class="card" id="RefreshToken">
+                        <div class="card-header">
+                            <h5 class="card-title">REFRESH TOKEN</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/refresh_token/</p>
+                            <p class="card-text">Header : Token *(refresh_token)</p>
+                            <hr>
+                            <h5>GET (Refresh Expired Access Token)</h5>
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE
+{
+    "code": "200",
+    "data": {
+        "Token": {
+            "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOjEsInR5cGUiOiJhY2Nlc3NfdG9rZW4iLCJleHAiOjE2NTkyNzYwMjZ9.Gh-tDS6phJ0eAlbVf1vfp0H5WSC5ITkqx8bzo50FHH8",
+            "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOjEsInR5cGUiOiJyZWZyZXNoX3Rva2VuIiwiZXhwIjoxNjYxODY3NDI2fQ.ftpy3HsgPndMsN2pCJZI7uuRqbFMplnENCEiWnaxX2E"
+        }
+    },
+    "error": null,
+    "message": "Refresh Token Success"
+}
+
+#OUTPUT IF TOKEN EXPIRE
+{
+    "code": "401",
+    "data": null,
+    "error": {
+        "header": [
+            {
+                "message": "Token Expired",
+                "params": "Token"
+            }
+        ]
+    },
+    "message": "Token Expired"
+}
+
+#OUTPUT IF TOKEN INVALID
+{
+    "code": "401",
+    "data": null,
+    "error": {
+        "header": [
+            {
+                "message": "Token Invalid",
+                "params": "Token"
+            }
+        ]
+    },
+    "message": "Token Invalid"
+}
+
+
                                     </code></pre>
                                 </div>
                             </div>
