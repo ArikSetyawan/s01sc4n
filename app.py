@@ -207,8 +207,8 @@ class Resource_Interactions(Resource):
 class Resource_Login(Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("Email", location="form")
-        parser.add_argument("Password", location="form")
+        parser.add_argument("Email", location="json")
+        parser.add_argument("Password", location="json")
         args = parser.parse_args()
 
         # List for error message
@@ -308,9 +308,9 @@ class Resource_Scan(Resource):
         auth = auth_handler.auth_access_wrapper(token)
 
         parser = reqparse.RequestParser()
-        parser.add_argument('NIK', required= True, location='form') #lawan bicara, #didapat dari scan QRcode
-        parser.add_argument('lat', required= True, location='form')
-        parser.add_argument('lng', required= True, location='form')
+        parser.add_argument('NIK', required= True, location='json') #lawan bicara, #didapat dari scan QRcode
+        parser.add_argument('lat', required= True, location='json')
+        parser.add_argument('lng', required= True, location='json')
         args = parser.parse_args()
 
         # check if Nik exists

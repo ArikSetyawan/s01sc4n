@@ -96,8 +96,7 @@
                         </div>
                         <div class="card-body">
                             <p class="card-text">Endpoint = /api/scan/</p>
-                            <p class="card-text">Header : Token</p>
-                            <p class="card-text">Content-Type : multipart/form-data</p>
+                            <p class="card-text">Header : {Token:"YourAccessToken", Content-Type : "application/json"}</p>
                             <hr>
                             <h5>GET (Doing Interaction)</h5>
                             <table class="table table-bordered">
@@ -155,7 +154,7 @@
                         </div>
                         <div class="card-body">
                             <p class="card-text">Endpoint = /api/interactions/</p>
-                            <p class="card-text">Header : Token</p>
+                            <p class="card-text">Header : {Token:"YourAccessToken"}</p>
                             <hr>
                             <h5>GET (Query Interactions)</h5>
                             <div class="row">
@@ -231,7 +230,7 @@
                             <p class="card-text">Endpoint = /api/login/</p>
                             <hr>
                             <h5>POST (Check Login)</h5>
-                            <p class="card-text">Content-Type : multipart/form-data</p>
+                            <p class="card-text">Header : {Content-Type : "application/json"}</p>
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
@@ -324,7 +323,7 @@
                         </div>
                         <div class="card-body">
                             <p class="card-text">Endpoint = /api/refresh_token/</p>
-                            <p class="card-text">Header : Token *(refresh_token)</p>
+                            <p class="card-text">Header : {Token:"YourRefreshToken"}</p>
                             <hr>
                             <h5>GET (Refresh Expired Access Token)</h5>
                             <div class="row">
