@@ -159,7 +159,7 @@ class Resource_Users(Resource):
             query_user = session.run("match (a:Users {NIK:$NIK}) return a ",NIK=int(args['NIK']))
             query_user = query_user.single()
             if query_user == None:
-                return jsonify({"code":"200","data":None,"error":None,"message":"Get User by NIK Success"})
+                return jsonify({"code":"404","data":None,"error":None,"message":"Get User by NIK Failed. User Not Found"})
             else:
                 query_user = query_user.data()['a']
                 return jsonify({"code":"200","data":query_user,"error":None,"message":"Get User by NIK Success"})
@@ -344,6 +344,64 @@ class Resource_Scan(Resource):
         }
         return jsonify(data_return)
 
+class ResourceTabDevice(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('tagid', location='args', required=True)
+        parser.add_argument('macaddress', location='args', required=True)
+        args = parser.parse_args()
+
+        # Get Place by mac_addr
+        place = session.run(' match (n:Places {mac_address:$mac_address}) return n ',mac_address=args['macaddress'])
+        place = place.single()
+        if place == None:
+            data_return = {
+                "data": None,
+                "message":"Place with mac_address {} Not Found".format(args['macaddress']),
+                "code": "404",
+                "error":None
+            }
+            return jsonify(data_return)
+        place = place.data()['n']
+
+        # Get Person 
+        person = session.run(' match (n:Users {Tagid:$tagid}) return n ', tagid=args['tagid'])
+        person = person.single()
+        if person == None:
+            data_return = {
+                "data": None,
+                "message":"User with Tagid {} Not Found".format(args['tagid']),
+                "code": "404",
+                "error":None
+            }
+            return jsonify(data_return)
+        person = person.data()['n']
+
+        # Generate InteractionID
+        InteractionID = str(uuid.uuid4())
+        # Generate Timestamp
+        datetime_sql = time.time()
+        # Format Timestamp to string
+        datetime_print = datetime.datetime.fromtimestamp(datetime_sql).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Create new interaction
+        interaction = session.run(" create(a:Interactions {InteractionID:$InteractionID,datetime_print:$datetime_print,datetime_sql:$datetime_sql,lat:$lat,lng:$lng}) ",InteractionID=InteractionID,datetime_print=datetime_print,datetime_sql=datetime_sql,lat=place['lat'] ,lng=place['lng'])
+
+        # Connect User
+        person1 = session.run("match (a:Users {Tagid:$Tagid}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",Tagid=args['tagid'],InteractionID=InteractionID)
+
+        # Connect Place
+        person1 = session.run("match (a:Places {mac_address:$mac_address}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",mac_address=args['macaddress'],InteractionID=InteractionID)
+
+
+        data_return = {
+            "data": None,
+            "message":"Interaction Created",
+            "code": "200",
+            "error":None
+        }
+        return jsonify(data_return)
+
 # class Resource_coba(Resource):
 #     def get(self):
 #         token = dict(request.headers)['Token']
@@ -356,6 +414,7 @@ api.add_resource(Resource_Interactions, "/api/interactions/")
 api.add_resource(Resource_Login, "/api/login/")
 api.add_resource(Resource_Refresh_Token, "/api/refresh_token/")
 api.add_resource(Resource_Scan, "/api/scan/")
+api.add_resource(ResourceTabDevice, '/api/tabdevice')
 # api.add_resource(Resource_coba, "/api/coba/")
 
 if __name__ == "__main__":

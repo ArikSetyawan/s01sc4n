@@ -16,6 +16,7 @@
             <ul>
                 <li><a href="#User">User</a></li>
                 <li><a href="#Scan">Scan</a></li>
+                <li><a href="#TabDevice">Tab Device</a></li>
                 <li><a href="#Interaction">Interaction</a></li>
                 <li><a href="#Login">Login</a></li>
                 <li><a href="#RefreshToken">Refresh Token</a></li>
@@ -81,6 +82,39 @@
     "error": null,
     "message": "Get User Success"
 }
+
+#OUTPUT IF USING NIK PARAMETERS
+{
+    "code": "200",
+    "data": {
+        "Email": "arik@gmail.com",
+        "NIK": 9936961364932,
+        "Name": "Arik",
+        "Password": "85236592636241",
+        "Phone": 27457851227657,
+        "Photo": "Default.png",
+        "Status": "Negatif",
+        "Tagid": "*CB*29*5C*3E",
+        "UserID": 1
+    },
+    "error": null,
+    "message": "Get User by NIK Success"
+}
+
+#OUTPUT IF USING NIK PARAMETERS BUT NOT FOUND
+{
+    "code": "404",
+    "data": null,
+    "error": null,
+    "message": "Get User by NIK Failed. User Not Found"
+}
+
+#OUTPUT IF NIK PARAMETERS NOT INT
+{
+    "message": {
+        "NIK": "invalid literal for int() with base 10: 'null'"
+    }
+}
                                     </code></pre>
                                 </div>
                             </div>
@@ -135,6 +169,74 @@
     "data": null,
     "error": null,
     "message": "Interaction Created"
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" style="margin-top: 30px;">
+                    <div class="card" id="TabDevice">
+                        <div class="card-header">
+                            <h5 class="card-title">Tab Device API (RFID)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Endpoint = /api/tabdevice</p>
+                            <hr>
+                            <h5>GET (Doing Interaction)</h5>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Parameters (Required)</th>
+                                        <th>Description</th>
+                                        <th>Data Type</th>
+                                    </tr>
+                                </thead>
+                                    <tr>
+                                        <td>tagid</td>
+                                        <td>From RFID/KTP</td>
+                                        <td>STR</td>
+                                    </tr>
+                                    <tr>
+                                        <td>macaddress</td>
+                                        <td>From Device</td>
+                                        <td>STR</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="card-text">Note: *Parameter Wajib Diisi.</p>
+
+                            <div class="row">
+                                <div class="col">
+                                    <pre class="language-javascript" data-jsonp="https://api.github.com/repos/leaverou/prism/contents/prism.js"><code>
+#OUTPUT EXAMPLE
+{
+    "code": "200",
+    "data": null,
+    "error": null,
+    "message": "Interaction Created"
+}
+
+#OUTPUT IF macaddress NOT FOUND
+{
+    "code": "404",
+    "data": null,
+    "error": null,
+    "message": "Place with mac_address 24:6F:28:2B:75:7D Not Found"
+}
+
+#OUTPUT IF TAGID USER NOT FOUND
+{
+    "code": "404",
+    "data": null,
+    "error": null,
+    "message": "User with Tagid *CB*29*5C*3A Not Found"
 }
                                     </code></pre>
                                 </div>
