@@ -10,7 +10,6 @@ graph_password = "0oIXkYwWMhaEfmccsTTQJeMz3nHScaPbrE451Cq28k0"
 graph_url = "neo4j+s://a0e76398.databases.neo4j.io:7687"
 
 driver = GraphDatabase.driver(graph_url, auth=basic_auth(graph_user, graph_password))
-session = driver.session()
 
 app = Flask(__name__)
 api = Api(app)
@@ -156,19 +155,27 @@ class Resource_Users(Resource):
 
         # Check if "NIK" in args
         if args['NIK']:
-            query_user = session.run("match (a:Users {NIK:$NIK}) return a ",NIK=int(args['NIK']))
-            query_user = query_user.single()
+            # Query User by NIK
+            with driver.session() as session:
+                query_user = session.run("match (a:Users {NIK:$NIK}) return a ",NIK=int(args['NIK']))
+                query_user = query_user.single()
+            driver.close()
+            # Check if query_user value
             if query_user == None:
                 return jsonify({"code":"404","data":None,"error":None,"message":"Get User by NIK Failed. User Not Found"})
             else:
                 query_user = query_user.data()['a']
                 return jsonify({"code":"200","data":query_user,"error":None,"message":"Get User by NIK Success"})
         else:
-            query_user = session.run("match (a:Users ) return a ")
             data_user = []
-            for i in query_user:
-                data = i.data()['a']
-                data_user.append(data)
+            
+            # Query all users
+            with driver.session() as session:
+                query_user = session.run("match (a:Users ) return a ")
+                for i in query_user:
+                    data = i.data()['a']
+                    data_user.append(data)
+            driver.close()
             return jsonify({"code":"200","data":data_user,"error":None,"message":"Get User Success"})
 
 class Resource_Interactions(Resource):
@@ -190,18 +197,23 @@ class Resource_Interactions(Resource):
         token = header['Token']
         # Validate Token
         auth = auth_handler.auth_access_wrapper(token)
-        query_user = session.run("match (a:Users {UserID:$UserID})-[r1]->(b:Interactions)<-[r2]-(c) return a,b,c",UserID=auth)
+
         data = []
-        for i in query_user:
-            # GET LABEL OF NODE
-            # print(list(i.values()[0].labels)[0])
-            node_data = i.data()
-            d = node_data['b']
-            if list(i.values()[2].labels)[0] == "Places":
-                d["Visit"] = node_data['c']
-            else:
-                d["Interaction"] = node_data['c']
-            data.append(d)
+        # Query Interaction
+        with driver.session() as session: 
+            GetInteractionUser = session.run("match (a:Users {UserID:$UserID})-[r1]->(b:Interactions)<-[r2]-(c) return a,b,c",UserID=auth)
+
+            for i in GetInteractionUser:
+                # GET LABEL OF NODE
+                # print(list(i.values()[0].labels)[0])
+                node_data = i.data()
+                d = node_data['b']
+                if list(i.values()[2].labels)[0] == "Places":
+                    d["Visit"] = node_data['c']
+                else:
+                    d["Interaction"] = node_data['c']
+                data.append(d)
+        driver.close()
         return jsonify({"code":"200","data":data,"error":None,"message":"Get Interactions Success"})
 
 class Resource_Login(Resource):
@@ -234,11 +246,16 @@ class Resource_Login(Resource):
 
             return jsonify(data_return)
 
-        cek_user = session.run('match (n:Users) where n.Email =$Email AND n.Password=$Password return n',Email=args['Email'],Password=args['Password'])
-        cek_user = cek_user.single()
+        # Query User by Email and Password for login
+        with driver.session() as session:
+            cek_user = session.run('match (n:Users) where n.Email =$Email AND n.Password=$Password return n',Email=args['Email'],Password=args['Password'])
+            cek_user = cek_user.single()
+        driver.close()
+
+        # Check if User is exists
         if cek_user != None:
             # set Token 
-            data = cek_user.data()['n']
+            data = cek_user = cek_user.data()['n']
             Token = auth_handler.encode_login_token(data['UserID'])
             data_return = {
                 "data":{"Token":Token,"User":data},
@@ -288,7 +305,7 @@ class Resource_Refresh_Token(Resource):
         return jsonify(data_return)
 
 class Resource_Scan(Resource):
-    def get(self):
+    def post(self):
         # Get Parameters from headers
         header = dict(request.headers)
         # Check if "Token" in headers
@@ -313,13 +330,34 @@ class Resource_Scan(Resource):
         parser.add_argument('lng', required= True, location='json')
         args = parser.parse_args()
 
+        # Query User in session
+        with driver.session() as session:
+            session_user = session.run("match (a:Users {UserID:$UserID}) return a ",UserID=auth)
+            session_user = session_user.single()
+        driver.close()
+
+        # Query User by NIK 
+        with driver.session() as session:
+            query_user = session.run("match (a:Users {NIK:$NIK}) return a ",NIK=int(args['NIK']))
+            query_user = query_user.single()
+        driver.close()
+
         # check if Nik exists
-        query_user = session.run("match (a:Users {NIK:$NIK}) return a ",NIK=int(args['NIK']))
-        query_user = query_user.single()
         if query_user == None:
             return jsonify({"code":"404","data":None,"error":None,"message":"Scan Failed. User by NIK:{} not Found".format(args['NIK'])})
-        query_user = query_user.data()['a']
         
+        query_user = query_user.data()['a']
+        session_user = session_user.data()['a']
+
+        if query_user['NIK'] == session_user['NIK']:
+            data_return = {
+                "data": None,
+                "message":"Create Interaction Failed. Cannot Interact With Your Self",
+                "code": "400",
+                "error":None
+            }
+            return jsonify(data_return)
+
         # Generate InteractionID
         InteractionID = str(uuid.uuid4())
         # Generate Timestamp
@@ -327,15 +365,18 @@ class Resource_Scan(Resource):
         # Format Timestamp to string
         datetime_print = datetime.datetime.fromtimestamp(datetime_sql).strftime('%Y-%m-%d %H:%M:%S')
         
-        # Create Interaction Node
-        interaction = session.run(" create(a:Interactions {InteractionID:$InteractionID,datetime_print:$datetime_print,datetime_sql:$datetime_sql,lat:$lat,lng:$lng}) ",InteractionID=InteractionID,datetime_print=datetime_print,datetime_sql=datetime_sql,lat=args['lat'] ,lng=args['lng'])
+        # Create and Connect Node Interaction
+        with driver.session() as session:
+            # Create Interaction Node
+            interaction = session.run(" create(a:Interactions {InteractionID:$InteractionID,datetime_print:$datetime_print,datetime_sql:$datetime_sql,lat:$lat,lng:$lng}) ",InteractionID=InteractionID,datetime_print=datetime_print,datetime_sql=datetime_sql,lat=args['lat'] ,lng=args['lng'])
 
-        # Connect User
-        person1 = session.run("match (a:Users {UserID:$UserID}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:MEET]->(b)  ",UserID=auth,InteractionID=InteractionID)
+            # Connect User
+            person1 = session.run("match (a:Users {UserID:$UserID}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:MEET]->(b)  ",UserID=auth,InteractionID=InteractionID)
 
-        # Connect User
-        person2 = session.run(" match(a:Users {UserID:$UserID}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:MEET]->(b) ",UserID=query_user["UserID"],InteractionID=InteractionID)
-        
+            # Connect User
+            person2 = session.run(" match(a:Users {UserID:$UserID}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:MEET]->(b) ",UserID=query_user["UserID"],InteractionID=InteractionID)
+        driver.close()
+
         data_return = {
             "data": None,
             "message":"Interaction Created",
@@ -352,8 +393,12 @@ class ResourceTabDevice(Resource):
         args = parser.parse_args()
 
         # Get Place by mac_addr
-        place = session.run(' match (n:Places {mac_address:$mac_address}) return n ',mac_address=args['macaddress'])
-        place = place.single()
+        with driver.session() as session:
+            place = session.run(' match (n:Places {mac_address:$mac_address}) return n ',mac_address=args['macaddress'])
+            place = place.single()
+        driver.close()
+
+        # Check if Place is exists
         if place == None:
             data_return = {
                 "data": None,
@@ -365,8 +410,12 @@ class ResourceTabDevice(Resource):
         place = place.data()['n']
 
         # Get Person 
-        person = session.run(' match (n:Users {Tagid:$tagid}) return n ', tagid=args['tagid'])
-        person = person.single()
+        with driver.session() as session:
+            person = session.run(' match (n:Users {Tagid:$tagid}) return n ', tagid=args['tagid'])
+            person = person.single()
+        driver.close()
+        
+        # Check if User is Exists
         if person == None:
             data_return = {
                 "data": None,
@@ -384,15 +433,18 @@ class ResourceTabDevice(Resource):
         # Format Timestamp to string
         datetime_print = datetime.datetime.fromtimestamp(datetime_sql).strftime('%Y-%m-%d %H:%M:%S')
 
-        # Create new interaction
-        interaction = session.run(" create(a:Interactions {InteractionID:$InteractionID,datetime_print:$datetime_print,datetime_sql:$datetime_sql,lat:$lat,lng:$lng}) ",InteractionID=InteractionID,datetime_print=datetime_print,datetime_sql=datetime_sql,lat=place['lat'] ,lng=place['lng'])
+        # Create and Connect Node Interaction
+        with driver.session() as session:
+            # Create new interaction
+            interaction = session.run(" create(a:Interactions {InteractionID:$InteractionID,datetime_print:$datetime_print,datetime_sql:$datetime_sql,lat:$lat,lng:$lng}) ",InteractionID=InteractionID,datetime_print=datetime_print,datetime_sql=datetime_sql,lat=place['lat'] ,lng=place['lng'])
 
-        # Connect User
-        person1 = session.run("match (a:Users {Tagid:$Tagid}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",Tagid=args['tagid'],InteractionID=InteractionID)
+            # Connect User
+            person1 = session.run("match (a:Users {Tagid:$Tagid}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",Tagid=args['tagid'],InteractionID=InteractionID)
 
-        # Connect Place
-        person1 = session.run("match (a:Places {mac_address:$mac_address}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",mac_address=args['macaddress'],InteractionID=InteractionID)
+            # Connect Place
+            person1 = session.run("match (a:Places {mac_address:$mac_address}),(b:Interactions {InteractionID:$InteractionID}) merge (a)-[:VISIT]->(b)  ",mac_address=args['macaddress'],InteractionID=InteractionID)
 
+        driver.close()
 
         data_return = {
             "data": None,
