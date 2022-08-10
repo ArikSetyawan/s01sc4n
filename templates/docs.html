@@ -170,6 +170,24 @@
     "error": null,
     "message": "Interaction Created"
 }
+
+#OUTPUT IF NIK NOT FOUND
+{
+  "code": "404",
+  "data": null,
+  "error": null,
+  "message": "Scan Failed. User by NIK 214124124: not Found"
+}
+
+#OUTPUT IF U SCAN UR SELF
+{
+    "data": null,
+    "message":"Create Interaction Failed. Cannot Interact With Your Self",
+    "code": "400",
+    "error":null
+}
+
+
                                     </code></pre>
                                 </div>
                             </div>
@@ -237,6 +255,14 @@
     "data": null,
     "error": null,
     "message": "User with Tagid *CB*29*5C*3A Not Found"
+}
+
+#OUTPUT IF SERVER DUKCAPIL ERROR
+{
+    "code": "408",
+    "data": null,
+    "error": null,
+    "message": "Server dukcapil Error"
 }
                                     </code></pre>
                                 </div>

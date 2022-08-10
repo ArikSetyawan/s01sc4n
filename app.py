@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse
 from neo4j import GraphDatabase, basic_auth
 import datetime, time, uuid
 import jwt
+import requests
 
 # Graph DB Connection
 graph_user = "neo4j"
@@ -417,15 +418,37 @@ class ResourceTabDevice(Resource):
         
         # Check if User is Exists
         if person == None:
-            data_return = {
-                "data": None,
-                "message":"User with Tagid {} Not Found".format(args['tagid']),
-                "code": "404",
-                "error":None
-            }
-            return jsonify(data_return)
-        person = person.data()['n']
+            # Try to find data from dukcapil
+            req_user = requests.get("http://dukcapil.mastya.my.id/api/tagid",params={"tagid":args['tagid']})
+            if req_user.status_code != 200:
+                # Return if dukcapil server error
+                data_return = {
+                    "data": None,
+                    "message":"Server dukcapil Error",
+                    "code": "408",
+                    "error":None
+                }
+                return jsonify(data_return)
 
+            res_user = req_user.json()
+            # Check if tagid is exists
+            if res_user['code'] == "404":
+                data_return = {
+                    "data": None,
+                    "message":"User with Tagid {} Not Found".format(args['tagid']),
+                    "code": "404",
+                    "error":None
+                }
+                return jsonify(data_return)
+
+            # Creating new User if data exists
+            UserID = uuid.uuid4()
+            Phone = ("083921480")
+            with driver.session() as session:
+                create_user = session.run(" create(a:Users {UserID:$UserID, Email:$Email, NIK:$NIK, Name:$Name, Password:$Password, Phone:$Phone, Photo:$Photo, Status:$Status, Tagid:$Tagid}) ",UserID=str(UserID), Email="{}@gmail.com".format(str(UserID.hex)), NIK=res_user['data']['NIK'], Name=res_user['data']['Name'], Password=str(UserID.hex), Phone=int(Phone), Photo="Default.png", Status="Negatif", Tagid=res_user['data']['TagID'] )
+            
+            driver.close()
+        
         # Generate InteractionID
         InteractionID = str(uuid.uuid4())
         # Generate Timestamp
