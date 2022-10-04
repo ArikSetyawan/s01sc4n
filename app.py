@@ -37,7 +37,7 @@ class AuthHandler():
             payload["exp"] = datetime.datetime.utcnow() + datetime.timedelta(hours=720)
 
         jwt_token = jwt.encode(payload, self.secret, algorithm="HS256")
-        return jwt_token
+        return jwt_token.decode('UTF-8')
 
     # Create Token
     def encode_login_token(self, userid):
@@ -256,7 +256,7 @@ class Resource_Login(Resource):
         # Check if User is exists
         if cek_user != None:
             # set Token 
-            data = cek_user = cek_user.data()['n']
+            data = cek_user.data()['n']
             Token = auth_handler.encode_login_token(data['UserID'])
             data_return = {
                 "data":{"Token":Token,"User":data},
@@ -477,6 +477,60 @@ class ResourceTabDevice(Resource):
         }
         return jsonify(data_return)
 
+class Resource_CheckAccessToken(Resource):
+    def get(self):
+        # Get Parameters from headers
+        header = dict(request.headers)
+        # Check if "Token" in headers
+        if "Token" not in header:
+            data_return = {
+                "data":None,
+                "message":"Token Not Found",
+                "code":"400",
+                "error":{
+                    "header":[{"params":"Token", "message":"Token Missing"}]
+                }
+            }
+            return jsonify(data_return)
+        # Get Token from headers
+        token = header['Token']
+        # Validate Token
+        auth = auth_handler.auth_access_wrapper(token)
+        data_return = {
+            "data":None,
+            "message":"Access Token Valid",
+            "code":"200",
+            "error":None
+        }
+        return jsonify(data_return)
+
+class Resource_CheckRefreshToken(Resource):
+    def get(self):
+        # Get Parameters from headers
+        header = dict(request.headers)
+        # Check if "Token" in headers
+        if "Token" not in header:
+            data_return = {
+                "data":None,
+                "message":"Token Not Found",
+                "code":"400",
+                "error":{
+                    "header":[{"params":"Token", "message":"Token Missing"}]
+                }
+            }
+            return jsonify(data_return)
+        # Get Token from headers
+        token = header['Token']
+        # Validate Token
+        auth = auth_handler.auth_refresh_wrapper(token)
+        data_return = {
+            "data":None,
+            "message":"Refresh Token Valid",
+            "code":"200",
+            "error":None
+        }
+        return jsonify(data_return)
+
 # class Resource_coba(Resource):
 #     def get(self):
 #         token = dict(request.headers)['Token']
@@ -490,6 +544,8 @@ api.add_resource(Resource_Login, "/api/login/")
 api.add_resource(Resource_Refresh_Token, "/api/refresh_token/")
 api.add_resource(Resource_Scan, "/api/scan/")
 api.add_resource(ResourceTabDevice, '/api/tabdevice')
+api.add_resource(Resource_CheckAccessToken, '/api/checkaccesstoken')
+api.add_resource(Resource_CheckRefreshToken, '/api/checkrefreshtoken')
 # api.add_resource(Resource_coba, "/api/coba/")
 
 if __name__ == "__main__":
