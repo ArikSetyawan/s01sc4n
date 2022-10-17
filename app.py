@@ -4,6 +4,7 @@ from neo4j import GraphDatabase, basic_auth
 import datetime, time, uuid
 import jwt
 import requests
+from service import notifyuser
 
 # Graph DB Connection
 graph_user = "neo4j"
@@ -22,6 +23,12 @@ app.config["SECRET_KEY"] = "ThisisVerySecret"
 def index():
     return render_template('docs.html')
 
+@app.route('/user_simulation')
+def user_simulation():
+    req = requests.get("http://127.0.0.1:5000/api/users/")
+    resp = req.json()['data']
+    return render_template("simulation.html",users=resp)
+
 # JWT
 class AuthHandler():
     secret = app.config['SECRET_KEY']
@@ -37,7 +44,12 @@ class AuthHandler():
             payload["exp"] = datetime.datetime.utcnow() + datetime.timedelta(hours=720)
 
         jwt_token = jwt.encode(payload, self.secret, algorithm="HS256")
+        
+        # If using #Python 3.8.10^
         return jwt_token.decode('UTF-8')
+        # Else
+        # return jwt_token
+
 
     # Create Token
     def encode_login_token(self, userid):
@@ -531,6 +543,82 @@ class Resource_CheckRefreshToken(Resource):
         }
         return jsonify(data_return)
 
+class Resource_TurnUserToPositif(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('UserID', location='args', required=True)
+        args = parser.parse_args()
+        
+        # Query User by UsersID
+        with driver.session() as session:
+            query_user = session.run("match (a:Users {UserID:$UserID}) return a ",UserID=args['UserID'])
+            query_user = query_user.single()
+        driver.close()
+        # Check if User Exists
+        if query_user == None:
+            data_return = {
+                "data":None,
+                "message":"User Not Found, Can't set user to positive",
+                "code":"404",
+                "error":None
+            }
+            return jsonify(data_return)
+        else:
+            # Set User Status to Positif
+            with driver.session() as session:
+                query_user = session.run("match (a:Users {UserID:$UserID}) set a.Status='Positif' return a ",UserID=args['UserID'])
+                query_user = query_user.single()
+            driver.close()
+
+
+        epoch_high = time.time()
+        origin = datetime.datetime.fromtimestamp(epoch_high)
+        last = origin - datetime.timedelta(days=3)
+        epoch_low = last.replace(hour=0 ,minute=0, second=0, microsecond=0).timestamp()
+        notifyuser.delay(args['UserID'],epoch_low,epoch_high)
+        data_return = {
+            "data":None,
+            "message":"User turned to positive",
+            "code":"200",
+            "error":None
+        }
+        return jsonify(data_return)
+
+class Resource_TurnUserToNegatif(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('UserID', location='args', required=True)
+        args = parser.parse_args()
+        
+        # Query User by UsersID
+        with driver.session() as session:
+            query_user = session.run("match (a:Users {UserID:$UserID}) return a ",UserID=args['UserID'])
+            query_user = query_user.single()
+        driver.close()
+        # Check if User Exists
+        if query_user == None:
+            data_return = {
+                "data":None,
+                "message":"User Not Found, Can't set user to positive",
+                "code":"404",
+                "error":None
+            }
+            return jsonify(data_return)
+        else:
+            # Set User Status to Positif
+            with driver.session() as session:
+                query_user = session.run("match (a:Users {UserID:$UserID}) set a.Status='Negatif' return a ",UserID=args['UserID'])
+                query_user = query_user.single()
+            driver.close()
+
+            data_return = {
+                "data":None,
+                "message":"User turned to Negatif",
+                "code":"200",
+                "error":None
+            }
+            return jsonify(data_return)
+
 # class Resource_coba(Resource):
 #     def get(self):
 #         token = dict(request.headers)['Token']
@@ -546,6 +634,8 @@ api.add_resource(Resource_Scan, "/api/scan/")
 api.add_resource(ResourceTabDevice, '/api/tabdevice')
 api.add_resource(Resource_CheckAccessToken, '/api/checkaccesstoken')
 api.add_resource(Resource_CheckRefreshToken, '/api/checkrefreshtoken')
+api.add_resource(Resource_TurnUserToPositif, '/api/turn_positif')
+api.add_resource(Resource_TurnUserToNegatif, '/api/turn_negatif')
 # api.add_resource(Resource_coba, "/api/coba/")
 
 if __name__ == "__main__":
