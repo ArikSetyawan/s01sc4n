@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, abort, request, make_response, render_template
-from flask_restful import Api, Resource, reqparse
+from flask_restx import Api, Resource, reqparse
 from neo4j import GraphDatabase, basic_auth
 import datetime, time, uuid
 import jwt
@@ -45,10 +45,7 @@ class AuthHandler():
 
         jwt_token = jwt.encode(payload, self.secret, algorithm="HS256")
         
-        # If using #Python 3.8.10^
-        return jwt_token.decode('UTF-8')
-        # Else
-        # return jwt_token
+        return jwt_token
 
 
     # Create Token
@@ -83,9 +80,8 @@ class AuthHandler():
                         "header":[{"params":"Token", "message":"Token Invalid"}]
                     }
                 }
-                response = make_response(data_return,401)
-                return abort(response)
-            return payload['iss']
+                return data_return,False
+            return payload['iss'],True
         except jwt.ExpiredSignatureError:
             data_return = {
                 "data":None,
@@ -95,8 +91,7 @@ class AuthHandler():
                     "header":[{"params":"Token", "message":"Token Expired"}]
                 }
             }
-            response = make_response(data_return,401)
-            return abort(response)
+            return data_return,False
         except jwt.InvalidTokenError as e:
             data_return = {
                 "data":None,
@@ -106,8 +101,7 @@ class AuthHandler():
                     "header":[{"params":"Token", "message":"Token Invalid"}]
                 }
             }
-            response = make_response(data_return,401)
-            return abort(response)
+            return data_return,False
 
     # Decode Token
     def decode_refresh_token(self, token):
@@ -122,9 +116,8 @@ class AuthHandler():
                         "header":[{"params":"Token", "message":"Token Invalid"}]
                     }
                 }
-                response = make_response(data_return,401)
-                return abort(response)
-            return payload['iss']
+                return data_return,False
+            return payload['iss'],True
         except jwt.ExpiredSignatureError:
             data_return = {
                 "data":None,
@@ -134,8 +127,7 @@ class AuthHandler():
                     "header":[{"params":"Token", "message":"Token Expired"}]
                 }
             }
-            response = make_response(data_return,401)
-            return abort(response)
+            return data_return,False
         except jwt.InvalidTokenError as e:
             data_return = {
                 "data":None,
@@ -145,8 +137,7 @@ class AuthHandler():
                     "header":[{"params":"Token", "message":"Token Invalid"}]
                 }
             }
-            response = make_response(data_return,401)
-            return abort(response)
+            return data_return,False
 
     # Check access Token
     def auth_access_wrapper(self, token):
@@ -209,7 +200,9 @@ class Resource_Interactions(Resource):
         # Get Token from headers
         token = header['Token']
         # Validate Token
-        auth = auth_handler.auth_access_wrapper(token)
+        auth,success = auth_handler.auth_access_wrapper(token)
+        if not success:
+            return auth,int(auth['code'])
 
         data = []
         # Query Interaction
@@ -306,11 +299,19 @@ class Resource_Refresh_Token(Resource):
         # Get Token from headers
         token = header['Token']
         # Validate Token
-        auth = auth_handler.auth_refresh_wrapper(token)
+        auth,success = auth_handler.auth_refresh_wrapper(token)
+        if not success:
+            return auth,int(auth['code'])
         # Generate new_token
         New_Token = auth_handler.encode_login_token(auth)
+        # Get User
+        with driver.session() as session:
+            user = session.run('match (n:Users) where n.UserID =$UserID return n',UserID=auth)
+            user = user.single()
+        driver.close()
+        user = user.data()['n']
         data_return = {
-            "data":{"Token":New_Token},
+            "data":{"Token":New_Token, "User":user},
             "message":"Refresh Token Success",
             "code":"200",
             "error":None
@@ -335,7 +336,9 @@ class Resource_Scan(Resource):
         # Get Token from headers
         token = header['Token']
         # Validate Token
-        auth = auth_handler.auth_access_wrapper(token)
+        auth,success = auth_handler.auth_access_wrapper(token)
+        if not success:
+            return auth,int(auth['code'])
 
         parser = reqparse.RequestParser()
         parser.add_argument('NIK', required= True, location='json') #lawan bicara, #didapat dari scan QRcode
@@ -507,14 +510,23 @@ class Resource_CheckAccessToken(Resource):
         # Get Token from headers
         token = header['Token']
         # Validate Token
-        auth = auth_handler.auth_access_wrapper(token)
-        data_return = {
-            "data":None,
-            "message":"Access Token Valid",
-            "code":"200",
-            "error":None
-        }
-        return jsonify(data_return)
+        auth,success = auth_handler.auth_access_wrapper(token)
+        if success:
+            # Get User
+            with driver.session() as session:
+                user = session.run('match (n:Users) where n.UserID =$UserID return n',UserID=auth)
+                user = user.single()
+            driver.close()
+            user = user.data()['n']
+            data_return = {
+                "data":{"User":user},
+                "message":"Access Token Valid",
+                "code":"200",
+                "error":None
+            }
+            return jsonify(data_return)
+        else:
+            return auth,int(auth['code'])
 
 class Resource_CheckRefreshToken(Resource):
     def get(self):
@@ -534,14 +546,23 @@ class Resource_CheckRefreshToken(Resource):
         # Get Token from headers
         token = header['Token']
         # Validate Token
-        auth = auth_handler.auth_refresh_wrapper(token)
-        data_return = {
-            "data":None,
-            "message":"Refresh Token Valid",
-            "code":"200",
-            "error":None
-        }
-        return jsonify(data_return)
+        auth,success = auth_handler.auth_refresh_wrapper(token)
+        if success:
+            # Get User
+            with driver.session() as session:
+                user = session.run('match (n:Users) where n.UserID =$UserID return n',UserID=auth)
+                user = user.single()
+            driver.close()
+            user = user.data()['n']
+            data_return = {
+                "data":{"User":user},
+                "message":"Refresh Token Valid",
+                "code":"200",
+                "error":None
+            }
+            return jsonify(data_return)
+        else :
+            return auth,int(auth['code'])
 
 class Resource_TurnUserToPositif(Resource):
     def get(self):
