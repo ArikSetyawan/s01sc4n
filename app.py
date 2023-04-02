@@ -640,13 +640,6 @@ class Resource_TurnUserToNegatif(Resource):
             }
             return jsonify(data_return)
 
-# class Resource_coba(Resource):
-#     def get(self):
-#         token = dict(request.headers)['Token']
-#         tes = auth_handler.auth_access_wrapper(token)
-#         print(tes)
-#         return jsonify({"message":"Success"})
-
 api.add_resource(Resource_Users, '/api/users/')
 api.add_resource(Resource_Interactions, "/api/interactions/")
 api.add_resource(Resource_Login, "/api/login/")
@@ -657,7 +650,6 @@ api.add_resource(Resource_CheckAccessToken, '/api/checkaccesstoken')
 api.add_resource(Resource_CheckRefreshToken, '/api/checkrefreshtoken')
 api.add_resource(Resource_TurnUserToPositif, '/api/turn_positif')
 api.add_resource(Resource_TurnUserToNegatif, '/api/turn_negatif')
-# api.add_resource(Resource_coba, "/api/coba/")
 
 if __name__ == "__main__":
 	app.run(debug=True)
