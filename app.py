@@ -19,7 +19,7 @@ api = Api(app)
 # App Config
 app.config["SECRET_KEY"] = "ThisisVerySecret"
 
-@app.route('/')
+@app.route('/docs')
 def index():
     return render_template('docs.html')
 
@@ -216,8 +216,10 @@ class Resource_Interactions(Resource):
                 d = node_data['b']
                 if list(i.values()[2].labels)[0] == "Places":
                     d["Visit"] = node_data['c']
+                    d['type'] = 'visit'
                 else:
                     d["Interaction"] = node_data['c']
+                    d['type'] = 'interaction'
                 data.append(d)
         driver.close()
         return jsonify({"code":"200","data":data,"error":None,"message":"Get Interactions Success"})
@@ -652,4 +654,4 @@ api.add_resource(Resource_TurnUserToPositif, '/api/turn_positif')
 api.add_resource(Resource_TurnUserToNegatif, '/api/turn_negatif')
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	app.run(host="0.0.0.0")

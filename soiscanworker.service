@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve soiscan MQ Worker
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/home/setyawanarik/s01sc4n
+Environment="PATH=/home/setyawanarik/venvlist/venvsoiscan/bin"
+ExecStart=/home/setyawanarik/venvlist/venvsoiscan/bin/python3 -m celery -A serv>
+
+[Install]
+WantedBy=multi-user.target
