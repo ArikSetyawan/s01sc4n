@@ -6,10 +6,13 @@ import jwt
 import requests
 from service import notifyuser
 
+# Schema
+from schemas.user_schema import *
+
 # Graph DB Connection
 graph_user = "neo4j"
-graph_password = "0oIXkYwWMhaEfmccsTTQJeMz3nHScaPbrE451Cq28k0"
-graph_url = "neo4j+s://a0e76398.databases.neo4j.io:7687"
+graph_password = "oDFcC_hTQW6kuwDV2Z718YDWNzDb_j1llSlHVZZVJYQ"
+graph_url = "neo4j+s://d3a274e0.databases.neo4j.io:7687"
 
 driver = GraphDatabase.driver(graph_url, auth=basic_auth(graph_user, graph_password))
 
@@ -150,6 +153,17 @@ class AuthHandler():
 # initiate AuthHandler
 auth_handler=AuthHandler()
 
+# Response Class Handler
+class SendResponse():
+    def json(code: int, success: bool, message: str = None, data: dict|list = None, error : dict|list = None):
+        return {
+            'code': code,
+            'success': success,
+            'message': message,
+            'data': data,
+            'error': error
+        }
+
 class Resource_Users(Resource):
     def get(self):
         # Initiate args
@@ -166,10 +180,11 @@ class Resource_Users(Resource):
             driver.close()
             # Check if query_user value
             if query_user == None:
-                return jsonify({"code":"404","data":None,"error":None,"message":"Get User by NIK Failed. User Not Found"})
+                return SendResponse.json(code=404,success=False, message="Get User by NIK Failed. User Not Found"),404
             else:
                 query_user = query_user.data()['a']
-                return jsonify({"code":"200","data":query_user,"error":None,"message":"Get User by NIK Success"})
+                user = UserSchema(**query_user)
+                return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=user),200
         else:
             data_user = []
             
@@ -178,9 +193,10 @@ class Resource_Users(Resource):
                 query_user = session.run("match (a:Users ) return a ")
                 for i in query_user:
                     data = i.data()['a']
-                    data_user.append(data)
+                    user = UserSchema(**data)
+                    data_user.append(user.model_dump())
             driver.close()
-            return jsonify({"code":"200","data":data_user,"error":None,"message":"Get User Success"})
+            return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=data_user),200
 
 class Resource_Interactions(Resource):
     def get(self):
@@ -282,6 +298,30 @@ class Resource_Login(Resource):
                 }
             }
             return jsonify(data_return)
+
+class Resource_Registration(Resource):
+    def post(self):
+        # Validate Input
+        # Check request must contain name, email, and password
+        try:
+            userSchema = UserSchema(**request.json)
+        except ValidationError as e:
+            return SendResponse.json(code=400,success=False, message="Registration Failed", error=e.errors()),400
+
+        # Check if email already used
+        with driver.session() as session:
+            cek_user = session.run('match (n:Users) where n.Email = $Email return n',Email=userSchema.Email)
+            cek_user = cek_user.single()
+            driver.close()
+        if cek_user is not None:
+            return SendResponse.json(code=400,success=False, message="Registration Failed. Email Already Used"),400
+        
+        # Insert User
+        with driver.session() as session:
+            session.run('create (n:Users {Name:$Name,Email:$Email,Password:$Password,UserID:$UserID,Photo:$Photo,NIK:$NIK,Status:$Status,Tagid:$Tagid,Phone:$Phone})',**userSchema.model_dump())
+            driver.close()
+        
+        return SendResponse.json(code=200,success=True, data=userSchema.model_dump(), message="Registration Success"),200
 
 class Resource_Refresh_Token(Resource):
     def get(self):
@@ -642,11 +682,12 @@ class Resource_TurnUserToNegatif(Resource):
             }
             return jsonify(data_return)
 
-api.add_resource(Resource_Users, '/api/users/')
-api.add_resource(Resource_Interactions, "/api/interactions/")
-api.add_resource(Resource_Login, "/api/login/")
-api.add_resource(Resource_Refresh_Token, "/api/refresh_token/")
-api.add_resource(Resource_Scan, "/api/scan/")
+api.add_resource(Resource_Users, '/api/users')
+api.add_resource(Resource_Interactions, "/api/interactions")
+api.add_resource(Resource_Login, "/api/login")
+api.add_resource(Resource_Registration, "/api/registration")
+api.add_resource(Resource_Refresh_Token, "/api/refresh_token")
+api.add_resource(Resource_Scan, "/api/scan")
 api.add_resource(ResourceTabDevice, '/api/tabdevice')
 api.add_resource(Resource_CheckAccessToken, '/api/checkaccesstoken')
 api.add_resource(Resource_CheckRefreshToken, '/api/checkrefreshtoken')
@@ -654,4 +695,4 @@ api.add_resource(Resource_TurnUserToPositif, '/api/turn_positif')
 api.add_resource(Resource_TurnUserToNegatif, '/api/turn_negatif')
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0")
+	app.run(host="0.0.0.0", debug=True)

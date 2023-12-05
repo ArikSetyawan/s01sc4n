@@ -7,7 +7,7 @@ User=root
 Group=www-data
 WorkingDirectory=/home/setyawanarik/s01sc4n
 Environment="PATH=/home/setyawanarik/venvlist/venvsoiscan/bin"
-ExecStart=/home/setyawanarik/venvlist/venvsoiscan/bin/gunicorn --workers 1 --bi>
+ExecStart=/home/setyawanarik/venvlist/venvsoiscan/bin/gunicorn --workers 1 --bind unix:s01sc4n.sock -m 007 app:app
 
 [Install]
 WantedBy=multi-user.target
