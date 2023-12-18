@@ -204,15 +204,7 @@ class Resource_Interactions(Resource):
         header = dict(request.headers)
         # Check if "Token" in headers
         if "Token" not in header:
-            data_return = {
-                "data":None,
-                "message":"Token Not Found",
-                "code":"400",
-                "error":{
-                    "header":[{"params":"Token", "message":"Token Missing"}]
-                }
-            }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Token Not Found", error={"header":[{"params":"Token", "message":"Token Missing"}]}),400
         # Get Token from headers
         token = header['Token']
         # Validate Token
@@ -238,7 +230,7 @@ class Resource_Interactions(Resource):
                     d['type'] = 'interaction'
                 data.append(d)
         driver.close()
-        return jsonify({"code":"200","data":data,"error":None,"message":"Get Interactions Success"})
+        return SendResponse.json(code=200,success=True, message="Get Interactions Success", data=data),200
 
 class Resource_Login(Resource):
     def post(self):
@@ -259,16 +251,7 @@ class Resource_Login(Resource):
                 error = {"params":"Password","message":"Password Missing"}
                 error_message.append(error)
 
-            data_return = {
-                "data":None,
-                "message":"Login Failed",
-                "code":"400",
-                "error":{
-                    "params":error_message
-                }
-            }
-
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Login Failed", error={"params":error_message}),400
 
         # Query User by Email and Password for login
         with driver.session() as session:
@@ -281,23 +264,18 @@ class Resource_Login(Resource):
             # set Token 
             data = cek_user.data()['n']
             Token = auth_handler.encode_login_token(data['UserID'])
-            data_return = {
-                "data":{"Token":Token,"User":data},
-                "message":"Login Success",
-                "code":"200",
-                "error":None
-            }
-            return jsonify(data_return)
+            return SendResponse.json(code=200,success=True, message="Login Success", data={"Token":Token,"User":data}),200
         else:
             data_return = {
                 "data":None,
                 "message":"Login Failed. Email or Password Wrong",
-                "code":"400",
+                "code":"401",
                 "error":{
                     "params":error_message
                 }
             }
-            return jsonify(data_return)
+            return data_return
+            return SendResponse.json(code=401,success=False, message="Login Failed. Email or Password Wrong", error={"params":error_message}),401
 
 class Resource_Registration(Resource):
     def post(self):
@@ -329,15 +307,8 @@ class Resource_Refresh_Token(Resource):
         header = dict(request.headers)
         # Check if "Token" in headers
         if "Token" not in header:
-            data_return = {
-                "data":None,
-                "message":"Token Not Found",
-                "code":"400",
-                "error":{
-                    "header":[{"params":"Token", "message":"Token Missing"}]
-                }
-            }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Token Not Found", error={"header":[{"params":"Token", "message":"Token Missing"}]}),400
+        
         # Get Token from headers
         token = header['Token']
         # Validate Token
@@ -352,13 +323,7 @@ class Resource_Refresh_Token(Resource):
             user = user.single()
         driver.close()
         user = user.data()['n']
-        data_return = {
-            "data":{"Token":New_Token, "User":user},
-            "message":"Refresh Token Success",
-            "code":"200",
-            "error":None
-        }
-        return jsonify(data_return)
+        return SendResponse.json(code=200,success=True, message="Refresh Token Success", data={"Token":New_Token, "User":user}),200
 
 class Resource_Scan(Resource):
     def post(self):
@@ -374,7 +339,8 @@ class Resource_Scan(Resource):
                     "header":[{"params":"Token", "message":"Token Missing"}]
                 }
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Token Not Found", error={"header":[{"params":"Token", "message":"Token Missing"}]}),400
+        
         # Get Token from headers
         token = header['Token']
         # Validate Token
@@ -402,7 +368,7 @@ class Resource_Scan(Resource):
 
         # check if Nik exists
         if query_user == None:
-            return jsonify({"code":"404","data":None,"error":None,"message":"Scan Failed. User by NIK:{} not Found".format(args['NIK'])})
+            return SendResponse.json(code=404,success=False, message=f"Scan Failed. User by NIK:{args['NIK']} not Found", error={"params":[{"params":"NIK", "message":"NIK Not Found"}]}),404
         
         query_user = query_user.data()['a']
         session_user = session_user.data()['a']
@@ -414,7 +380,7 @@ class Resource_Scan(Resource):
                 "code": "400",
                 "error":None
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Create Interaction Failed. Cannot Interact With Your Self", error={"params":[{"params":"NIK", "message":"Cannot Interact With Your Self"}]}),400
 
         # Generate InteractionID
         InteractionID = str(uuid.uuid4())
@@ -441,7 +407,7 @@ class Resource_Scan(Resource):
             "code": "200",
             "error":None
         }
-        return jsonify(data_return)
+        return SendResponse.json(code=200,success=True, message="Interaction Created", data=data_return),200
 
 class ResourceTabDevice(Resource):
     def get(self):
@@ -548,7 +514,8 @@ class Resource_CheckAccessToken(Resource):
                     "header":[{"params":"Token", "message":"Token Missing"}]
                 }
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Token Not Found", error={"header":[{"params":"Token", "message":"Token Missing"}]}),400
+        
         # Get Token from headers
         token = header['Token']
         # Validate Token
@@ -566,7 +533,7 @@ class Resource_CheckAccessToken(Resource):
                 "code":"200",
                 "error":None
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=200,success=True, message="Access Token Valid", data={"User":user}),200
         else:
             return auth,int(auth['code'])
 
@@ -584,7 +551,7 @@ class Resource_CheckRefreshToken(Resource):
                     "header":[{"params":"Token", "message":"Token Missing"}]
                 }
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=400,success=False, message="Token Not Found", error={"header":[{"params":"Token", "message":"Token Missing"}]}),400
         # Get Token from headers
         token = header['Token']
         # Validate Token
@@ -602,7 +569,7 @@ class Resource_CheckRefreshToken(Resource):
                 "code":"200",
                 "error":None
             }
-            return jsonify(data_return)
+            return SendResponse.json(code=200,success=True, message="Refresh Token Valid", data={"User":user}),200
         else :
             return auth,int(auth['code'])
 
