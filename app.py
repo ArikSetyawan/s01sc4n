@@ -266,15 +266,6 @@ class Resource_Login(Resource):
             Token = auth_handler.encode_login_token(data['UserID'])
             return SendResponse.json(code=200,success=True, message="Login Success", data={"Token":Token,"User":data}),200
         else:
-            data_return = {
-                "data":None,
-                "message":"Login Failed. Email or Password Wrong",
-                "code":"401",
-                "error":{
-                    "params":error_message
-                }
-            }
-            return data_return
             return SendResponse.json(code=401,success=False, message="Login Failed. Email or Password Wrong", error={"params":error_message}),401
 
 class Resource_Registration(Resource):
