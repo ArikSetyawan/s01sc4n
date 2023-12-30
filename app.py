@@ -169,7 +169,22 @@ class Resource_Users(Resource):
         # Initiate args
         parser = reqparse.RequestParser()
         parser.add_argument('NIK',location='args',type=int)
+        parser.add_argument('UserID', location='args', type=str)
         args = parser.parse_args()
+
+        # Check if "UserID" and "NIK" not in args
+        if not args['UserID'] and not args['NIK']:
+            data_user = []
+            
+            # Query all users
+            with driver.session() as session:
+                query_user = session.run("match (a:Users ) return a ")
+                for i in query_user:
+                    data = i.data()['a']
+                    user = UserSchema(**data)
+                    data_user.append(user.model_dump())
+            driver.close()
+            return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=data_user),200
 
         # Check if "NIK" in args
         if args['NIK']:
@@ -184,19 +199,23 @@ class Resource_Users(Resource):
             else:
                 query_user = query_user.data()['a']
                 user = UserSchema(**query_user)
-                return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=user),200
-        else:
-            data_user = []
-            
-            # Query all users
+                return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=user.model_dump()),200
+        
+        # Check if "UserID" in args
+        if args['UserID']:
+            # Query User by UserID
             with driver.session() as session:
-                query_user = session.run("match (a:Users ) return a ")
-                for i in query_user:
-                    data = i.data()['a']
-                    user = UserSchema(**data)
-                    data_user.append(user.model_dump())
+                query_user = session.run("match (a:Users {UserID:$UserID}) return a ",UserID=args['UserID'])
+                query_user = query_user.single()
             driver.close()
-            return SendResponse.json(code=200,success=True, message="Get User by NIK Success", data=data_user),200
+            # Check if query_user value
+            if query_user == None:
+                return SendResponse.json(code=404,success=False, message="Get User by UserID Failed. User Not Found"),404
+            else:
+                query_user = query_user.data()['a']
+                user = UserSchema(**query_user)
+                return SendResponse.json(code=200,success=True, message="Get User by UserID Success", data=user.model_dump()),200
+        
 
 class Resource_Interactions(Resource):
     def get(self):
