@@ -295,7 +295,8 @@ class Resource_Registration(Resource):
             userSchema = UserSchema(**request.json)
         except ValidationError as e:
             return SendResponse.json(code=400,success=False, message="Registration Failed", error=e.errors()),400
-
+        # Set Random NIK
+        userSchema.NIK = int(str(uuid.uuid4().int>>64)[0:8] + str(uuid.uuid4().int>>64)[0:8])
         # Check if email already used
         with driver.session() as session:
             cek_user = session.run('match (n:Users) where n.Email = $Email return n',Email=userSchema.Email)
