@@ -292,6 +292,7 @@ class Resource_Registration(Resource):
         # Validate Input
         # Check request must contain name, email, and password
         try:
+            request.json['UserID'] = uuid.uuid4().hex
             userSchema = UserSchema(**request.json)
         except ValidationError as e:
             return SendResponse.json(code=400,success=False, message="Registration Failed", error=e.errors()),400

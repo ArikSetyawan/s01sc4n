@@ -10,5 +10,5 @@ class UserSchema(BaseModel):
     Email:str
     NIK:Optional[int] = None
     Password:str
-    UserID:Optional[str] = uuid.uuid4().hex
+    UserID:str
     Photo:Optional[str] = "Default.png"
