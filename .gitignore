@@ -1,3 +1,5 @@
 credentials-a0e76398.env
 __pycache__/
 .venv
+.env
+SoiscanServiceAccountKey.json

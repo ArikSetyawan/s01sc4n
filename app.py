@@ -4,15 +4,20 @@ from neo4j import GraphDatabase, basic_auth
 import datetime, time, uuid
 import jwt
 import requests
+import os
 from service import notifyuser
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Schema
 from schemas.user_schema import *
 
 # Graph DB Connection
-graph_user = "neo4j"
-graph_password = "oDFcC_hTQW6kuwDV2Z718YDWNzDb_j1llSlHVZZVJYQ"
-graph_url = "neo4j+s://d3a274e0.databases.neo4j.io:7687"
+graph_user = os.getenv('NEO4JUSER')
+graph_password = os.getenv('NEO4JPASSWORD')
+graph_url = os.getenv('NEO4JDBURL')
 
 driver = GraphDatabase.driver(graph_url, auth=basic_auth(graph_user, graph_password))
 
@@ -20,7 +25,7 @@ app = Flask(__name__)
 api = Api(app)
 
 # App Config
-app.config["SECRET_KEY"] = "ThisisVerySecret"
+app.config["SECRET_KEY"] = os.getenv('SECRETKEY')
 
 @app.route('/docs')
 def index():

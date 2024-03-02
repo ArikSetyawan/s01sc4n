@@ -2,6 +2,11 @@ import firebase_admin
 from firebase_admin import credentials, firestore, messaging
 from neo4j import GraphDatabase, basic_auth
 from celery import Celery
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Firebase Setup
 cred = credentials.Certificate("SoiscanServiceAccountKey.json")
@@ -9,16 +14,14 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # DB setup
-graph_user = "neo4j"
-graph_password = "0oIXkYwWMhaEfmccsTTQJeMz3nHScaPbrE451Cq28k0"
-graph_url = "neo4j+s://a0e76398.databases.neo4j.io:7687"
+graph_user = os.getenv('NEO4JUSER')
+graph_password = os.getenv('NEO4JPASSWORD')
+graph_url = os.getenv('NEO4JDBURL')
 driver = GraphDatabase.driver(graph_url, auth=basic_auth(graph_user, graph_password))
 
 # Celery Setup
 # Broker sayamastya lavinmq two million message
-broker_mastya_lavinmq = "amqps://wcyzdxsn:SAJ5131CYZTwhkEYar1PFOBbUdOJFQK6@fuji.lmq.cloudamqp.com/wcyzdxsn"
-broker_mastya_rabbitmq = "amqps://wicukpje:5A-R1lPa04tmhmSbM3TQjlE4XWfA_sne@armadillo.rmq.cloudamqp.com/wicukpje"
-broker_setyawanarik_rabbitmq = "amqps://rbjnwlzo:kdTz3Q6edDXpyFnsZi_P6Hrcmh823xEq@armadillo.rmq.cloudamqp.com/rbjnwlzo"
+broker_mastya_lavinmq = os.getenv('MBURL')
 app = Celery("tasks", broker=broker_mastya_lavinmq)
 
 def search(iduser,epoch_low,epoch_high, email_list):
